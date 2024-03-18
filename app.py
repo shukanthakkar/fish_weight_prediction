@@ -15,7 +15,10 @@ logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s 
 app = Flask(__name__)
 
 # Load the trained machine learning model
-model = joblib.load("fish_weight_prediction_model.pkl")
+try:
+    model = joblib.load("fish_weight_prediction_model.pkl")
+except Exception as e:
+    logging.error(f'An error occurred while loading the model: {str(e)}')
 
 # Define the index route to render the frontend
 @app.route('/')
@@ -37,14 +40,18 @@ def predict():
         height = float(data['height'])
         width = float(data['width'])
 
-        # Make a prediction using the model
-        prediction = model.predict([[length1, length2, length3, height, width]])
+        # Make a prediction using the model if it's loaded
+        if model:
+            prediction = model.predict([[length1, length2, length3, height, width]])
 
-        # Log the prediction
-        logging.info(f'Prediction: {prediction}')
+            # Log the prediction
+            logging.info(f'Prediction: {prediction}')
 
-        # Return the prediction as JSON
-        return jsonify({'weight': prediction[0]})
+            # Return the prediction as JSON
+            return jsonify({'weight': prediction[0]})
+        else:
+            logging.error('Model is not loaded.')
+            return jsonify({'error': 'Model is not loaded.'})
     except Exception as e:
         # Log any exceptions that occur during prediction
         logging.error(f'An error occurred during prediction: {str(e)}')
