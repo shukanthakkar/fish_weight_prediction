@@ -5,8 +5,12 @@ Created on Mon Mar 18 11:43:15 2024
 @author: Admin
 """
 
+import logging
 from flask import Flask, render_template, request, jsonify
 import joblib
+
+# Configure logging to write to a file
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
 app = Flask(__name__)
 
@@ -16,26 +20,35 @@ model = joblib.load("fish_weight_prediction_model.pkl")
 # Define the index route to render the frontend
 @app.route('/')
 def index():
+    logging.info('Rendering index.html')
     return render_template('index.html')
 
 # Define a route to handle predictions
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Get input data from the frontend
-    data = request.get_json()
+    try:
+        # Get input data from the frontend
+        data = request.get_json()
 
-    # Extract features from the input data
-    length1 = float(data['length1'])
-    length2 = float(data['length2'])
-    length3 = float(data['length3'])
-    height = float(data['height'])
-    width = float(data['width'])
+        # Extract features from the input data
+        length1 = float(data['length1'])
+        length2 = float(data['length2'])
+        length3 = float(data['length3'])
+        height = float(data['height'])
+        width = float(data['width'])
 
-    # Make a prediction using the model
-    prediction = model.predict([[length1, length2, length3, height, width]])
+        # Make a prediction using the model
+        prediction = model.predict([[length1, length2, length3, height, width]])
 
-    # Return the prediction as JSON
-    return jsonify({'weight': prediction[0]})
+        # Log the prediction
+        logging.info(f'Prediction: {prediction}')
+
+        # Return the prediction as JSON
+        return jsonify({'weight': prediction[0]})
+    except Exception as e:
+        # Log any exceptions that occur during prediction
+        logging.error(f'An error occurred during prediction: {str(e)}')
+        return jsonify({'error': 'An error occurred during prediction'})
 
 if __name__ == '__main__':
     app.run(debug=True)
