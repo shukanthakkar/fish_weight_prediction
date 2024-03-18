@@ -13,18 +13,16 @@
 # !pip install --upgrade setuptools
 
 
-# In[ ]:
+# In[12]:
 
 
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV  # Import GridSearchCV for hyperparameter tuning
+from sklearn.model_selection import train_test_split, GridSearchCV, ParameterGrid
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 import joblib
-import matplotlib.pyplot as plt  # Import matplotlib for plotting
-
-app = Flask(__name__)
+import matplotlib.pyplot as plt
 
 # Load the dataset
 data = pd.read_csv("fish.csv")
@@ -34,45 +32,57 @@ X = data.drop(columns=['Species', 'Weight'])
 y = data['Weight']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Perform GridSearchCV to find the best hyperparameters
+# Define the parameter grid
 param_grid = {
-    'n_estimators': [50, 100, 150, 200],  # Test different number of trees
-    'max_depth': [None, 10, 20, 30],  # Test different maximum depths
-    'min_samples_split': [2, 5, 10, 15],  # Test different minimum samples for split
-    'min_samples_leaf': [1, 2, 4]  # Test different minimum samples for leaf node
+    'n_estimators': [50, 100, 150, 200],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10, 15],
+    'min_samples_leaf': [1, 2, 4]
 }
-grid_search = GridSearchCV(RandomForestRegressor(random_state=42), param_grid, cv=5, scoring='neg_mean_squared_error')
-grid_search.fit(X_train, y_train)
+
+# Create parameter grid
+grid = ParameterGrid(param_grid)
+
+# Initialize an empty list to store the mean metrics
+mean_metrics = []
+
+# Initialize variables to store the best model and its parameters
+best_model = None
+best_params = None
+best_mse = float('inf')  # Initialize with a large value
+
+# Perform grid search and print the combination being trained along with the mean metric
+for i, params in enumerate(grid):
+    print(f"Run {i + 1}: Parameters - {params}")
+
+    # Train a RandomForestRegressor model with current hyperparameters
+    model = RandomForestRegressor(**params, random_state=42)
+    model.fit(X_train, y_train)
+
+    # Evaluate the model
+    y_pred = model.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    mean_metrics.append(mse)
+    print(f"Mean Squared Error: {mse}")
+
+    # Check if this model is the best so far
+    if mse < best_mse:
+        best_mse = mse
+        best_model = model
+        best_params = params
 
 # Plot RMSE over the grid
-results = pd.DataFrame(grid_search.cv_results_)
-scores = -results['mean_test_score'].values.reshape(len(param_grid['n_estimators']), len(param_grid['max_depth']))
 plt.figure(figsize=(12, 8))
-plt.imshow(scores, interpolation='nearest', cmap=plt.cm.hot)
-plt.xlabel('max_depth')
-plt.ylabel('n_estimators')
-plt.colorbar()
-plt.xticks(ticks=range(len(param_grid['max_depth'])), labels=param_grid['max_depth'])
-plt.yticks(ticks=range(len(param_grid['n_estimators'])), labels=param_grid['n_estimators'])
-plt.title('Grid Search Mean Test Score (Negative MSE)')
+plt.plot(mean_metrics, marker='o')
+plt.xlabel('Hyperparameter Combination')
+plt.ylabel('Mean Squared Error')
+plt.title('Grid Search Mean Squared Error')
+plt.xticks(ticks=range(len(mean_metrics)), labels=range(1, len(mean_metrics) + 1))
+plt.grid(True)
 plt.show()
-
-# Get the best parameters and train the model with the best parameters
-best_params = grid_search.best_params_
-best_model = RandomForestRegressor(**best_params, random_state=42)
-best_model.fit(X_train, y_train)
-
-# Evaluate the best model
-y_pred = best_model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-print("Mean Squared Error (Best Model):", mse)
 
 # Save the best trained model
 joblib.dump(best_model, "fish_weight_prediction_model.pkl")
-
-
-# In[ ]:
-
-
-
+print("Best Model Parameters:", best_params)
+print("Best Mean Squared Error:", best_mse)
 
