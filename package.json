@@ -1,0 +1,12 @@
+{
+  "name": "fish-weight-predictions",
+  "version": "1.0.0",
+  "description": "Description of your Node.js application",
+  "main": "app.js", // Entry point of your application
+  "scripts": {
+    "start": "node app.js" // Command to start your application
+  },
+  "keywords": [ML,Prediction,Fish],
+  "author": "Shukan Thakkar",
+  "license": "MIT"
+}
