@@ -5,6 +5,7 @@ Created on Mon Mar 18 11:43:15 2024
 @author: Admin
 """
 
+import os
 import logging
 from flask import Flask, render_template, request, jsonify
 import joblib
@@ -15,8 +16,9 @@ logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s 
 app = Flask(__name__)
 
 # Load the trained machine learning model
+model_path = os.getenv("MODEL_PATH", "fish_weight_prediction_model.pkl")
 try:
-    model = joblib.load("fish_weight_prediction_model.pkl")
+    model = joblib.load(model_path)
 except Exception as e:
     logging.error(f'An error occurred while loading the model: {str(e)}')
 
@@ -57,5 +59,7 @@ def predict():
         logging.error(f'An error occurred during prediction: {str(e)}')
         return jsonify({'error': 'An error occurred during prediction'})
 
+# Run the Flask app
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
