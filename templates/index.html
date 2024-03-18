@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fish Weight Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Fish Weight Prediction</h1>
+        <label for="length1">Length 1:</label>
+        <input type="number" id="length1" name="length1" placeholder="Enter length 1"><br>
+        <label for="length2">Length 2:</label>
+        <input type="number" id="length2" name="length2" placeholder="Enter length 2"><br>
+        <label for="length3">Length 3:</label>
+        <input type="number" id="length3" name="length3" placeholder="Enter length 3"><br>
+        <label for="height">Height:</label>
+        <input type="number" id="height" name="height" placeholder="Enter height"><br>
+        <label for="width">Width:</label>
+        <input type="number" id="width" name="width" placeholder="Enter width"><br>
+        <button onclick="predictWeight()">Predict Weight</button>
+        <p id="result"></p>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

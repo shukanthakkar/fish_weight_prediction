@@ -1,0 +1,41 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Mar 18 11:43:15 2024
+
+@author: Admin
+"""
+
+from flask import Flask, render_template, request, jsonify
+import joblib
+
+app = Flask(__name__)
+
+# Load the trained machine learning model
+model = joblib.load("fish_weight_prediction_model.pkl")
+
+# Define the index route to render the frontend
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Define a route to handle predictions
+@app.route('/predict', methods=['POST'])
+def predict():
+    # Get input data from the frontend
+    data = request.get_json()
+
+    # Extract features from the input data
+    length1 = float(data['length1'])
+    length2 = float(data['length2'])
+    length3 = float(data['length3'])
+    height = float(data['height'])
+    width = float(data['width'])
+
+    # Make a prediction using the model
+    prediction = model.predict([[length1, length2, length3, height, width]])
+
+    # Return the prediction as JSON
+    return jsonify({'weight': prediction[0]})
+
+if __name__ == '__main__':
+    app.run(debug=True)
